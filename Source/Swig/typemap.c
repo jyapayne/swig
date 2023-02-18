@@ -1834,7 +1834,7 @@ void Swig_typemap_attach_parms(const_String_or_char_ptr tmap_method, ParmList *p
     for (i = 0; i < nmatch; i++) {
       SwigType *type = Getattr(p, "type");
       String *pname = Getattr(p, "name");
-      String *lname = Getattr(p, "lname");
+      String *lname = Swig_cparm_name(p, argnum-1);
       SwigType *mtype = Getattr(p, "tmap:match");
       SwigType *matchtype = mtype ? mtype : type;
 

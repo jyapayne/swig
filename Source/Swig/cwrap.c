@@ -58,7 +58,8 @@ const char *Swig_cresult_name(void) {
 String *Swig_cparm_name(Parm *p, int i) {
   String *name = NewStringf("arg%d", i + 1);
   if (p) {
-    Setattr(p, "lname", name);
+    String *lname = Getattr(p, "lname");
+    if (!lname) Setattr(p, "lname", name);
   }
 
   return name;
