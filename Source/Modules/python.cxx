@@ -4,7 +4,7 @@
  * terms also apply to certain portions of SWIG. The full details of the SWIG
  * license and copyrights can be found in the LICENSE and COPYRIGHT files
  * included with the SWIG source code as distributed by the SWIG developers
- * and at http://www.swig.org/legal.html.
+ * and at https://www.swig.org/legal.html.
  *
  * python.cxx
  *
@@ -587,7 +587,7 @@ public:
 
     Swig_banner(f_begin);
 
-    Printf(f_runtime, "\n\n#ifndef SWIGPYTHON\n#define SWIGPYTHON\n#endif\n\n");
+    Swig_obligatory_macros(f_runtime, "PYTHON");
 
     if (directorsEnabled()) {
       Printf(f_runtime, "#define SWIG_DIRECTORS\n");
@@ -1898,16 +1898,20 @@ public:
 	    String *str = Getattr(n, "feature:docstring");
 	    if (!str || Len(str) == 0) {
 	      if (builtin) {
-		String *name = Getattr(n, "name");
-		String *rname = add_explicit_scope(SwigType_namestr(name));
+		SwigType *name = Getattr(n, "name");
+		SwigType *sname = add_explicit_scope(name);
+		String *rname = SwigType_namestr(sname);
 		Printf(doc, "%s", rname);
+		Delete(sname);
 		Delete(rname);
 	      } else {
+		String *classname_str = SwigType_namestr(real_classname);
 		if (CPlusPlus) {
-		  Printf(doc, "Proxy of C++ %s class.", SwigType_namestr(real_classname));
+		  Printf(doc, "Proxy of C++ %s class.", classname_str);
 		} else {
-		  Printf(doc, "Proxy of C %s struct.", SwigType_namestr(real_classname));
+		  Printf(doc, "Proxy of C %s struct.", classname_str);
 		}
+		Delete(classname_str);
 	      }
 	    }
 	  }
@@ -2810,7 +2814,7 @@ public:
       Printv(f->def, linkage, wrap_return, wname, "(PyObject *self, PyObject *args, PyObject *kwargs) {", NIL);
     }
 
-    if (builtin) {
+    if (!builtin) {
       /* Avoid warning if the self parameter is not used. */
       Append(f->code, "(void)self;\n");
     }
@@ -3150,27 +3154,9 @@ public:
 	  Replaceall(tm, "$owner", "0");
 	}
       }
-      // FIXME: this will not try to unwrap directors returned as non-director
-      //        base class pointers!
 
-      /* New addition to unwrap director return values so that the original
-       * python object is returned instead.
-       */
-#if 1
-      int unwrap = 0;
-      String *decl = Getattr(n, "decl");
-      int is_pointer = SwigType_ispointer_return(decl);
-      int is_reference = SwigType_isreference_return(decl);
-      if (is_pointer || is_reference) {
-	String *type = Getattr(n, "type");
-	//Node *classNode = Swig_methodclass(n);
-	//Node *module = Getattr(classNode, "module");
-	Node *module = Getattr(parent, "module");
-	Node *target = Swig_directormap(module, type);
-	if (target)
-	  unwrap = 1;
-      }
-      if (unwrap) {
+      // Unwrap return values that are director classes so that the original Python object is returned instead. 
+      if (!constructor && Swig_director_can_unwrap(n)) {
 	Wrapper_add_local(f, "director", "Swig::Director *director = 0");
 	Printf(f->code, "director = SWIG_DIRECTOR_CAST(%s);\n", Swig_cresult_name());
 	Append(f->code, "if (director) {\n");
@@ -3182,9 +3168,7 @@ public:
       } else {
 	Printf(f->code, "%s\n", tm);
       }
-#else
-      Printf(f->code, "%s\n", tm);
-#endif
+
       Delete(tm);
     } else {
       Swig_warning(WARN_TYPEMAP_OUT_UNDEF, input_file, line_number, "Unable to use return type %s in function %s.\n", SwigType_str(d, 0), name);
@@ -3942,35 +3926,36 @@ public:
    * classHandler()
    * ------------------------------------------------------------ */
 
-  String *add_explicit_scope(String *s) {
+  SwigType *add_explicit_scope(SwigType *s) {
     if (!Strstr(s, "::")) {
-      String *ss = NewStringf("::%s", s);
-      Delete(s);
-      s = ss;
+      return NewStringf("::%s", s);
     }
-    return s;
+    return Copy(s);
   }
 
   void builtin_pre_decl(Node *n) {
-    String *name = Getattr(n, "name");
-    String *rname = add_explicit_scope(SwigType_namestr(name));
-    String *mname = SwigType_manglestr(rname);
+    SwigType *name = Getattr(n, "name");
+    SwigType *sname = add_explicit_scope(name);
+    String *rname = SwigType_namestr(sname);
+    String *mname = SwigType_manglestr(sname);
 
     Printf(f_init, "\n/* type '%s' */\n", rname);
     Printf(f_init, "    builtin_pytype = (PyTypeObject *)&SwigPyBuiltin_%s_type;\n", mname);
     Printf(f_init, "    builtin_pytype->tp_dict = d = PyDict_New();\n");
 
+    Delete(sname);
     Delete(rname);
     Delete(mname);
   }
 
   void builtin_post_decl(File *f, Node *n) {
-    String *name = Getattr(n, "name");
-    String *pname = Copy(name);
+    SwigType *name = Getattr(n, "name");
+    SwigType *pname = Copy(name);
     SwigType_add_pointer(pname);
     String *symname = Getattr(n, "sym:name");
-    String *rname = add_explicit_scope(SwigType_namestr(name));
-    String *mname = SwigType_manglestr(rname);
+    SwigType *sname = add_explicit_scope(name);
+    String *rname = SwigType_namestr(sname);
+    String *mname = SwigType_manglestr(sname);
     String *pmname = SwigType_manglestr(pname);
     String *templ = NewStringf("SwigPyBuiltin_%s", mname);
     int funpack = fastunpack;
@@ -4073,14 +4058,16 @@ public:
       Printf(f, "  PyTuple_SET_ITEM(tuple, 0, other);\n");
       Printf(f, "  Py_XINCREF(other);\n");
     }
-    Iterator rich_iter = First(richcompare);
+    List *richcompare_list = SortedKeys(richcompare, 0);
+    Iterator rich_iter = First(richcompare_list);
     if (rich_iter.item) {
       Printf(f, "  switch (op) {\n");
       for (; rich_iter.item; rich_iter = Next(rich_iter))
-	Printf(f, "    case %s : result = %s(self, %s); break;\n", rich_iter.key, rich_iter.item, funpack ? "other" : "tuple");
+	Printf(f, "    case %s : result = %s(self, %s); break;\n", rich_iter.item, Getattr(richcompare, rich_iter.item), funpack ? "other" : "tuple");
       Printv(f, "    default : break;\n", NIL);
       Printf(f, "  }\n");
     }
+    Delete(richcompare_list);
     Printv(f, "  if (!result) {\n", NIL);
     Printv(f, "    if (SwigPyObject_Check(self) && SwigPyObject_Check(other)) {\n", NIL);
     Printv(f, "      result = SwigPyObject_richcompare((SwigPyObject *)self, (SwigPyObject *)other, op);\n", NIL);
@@ -4399,9 +4386,10 @@ public:
 
     Delete(clientdata);
     Delete(smart);
+    Delete(sname);
     Delete(rname);
-    Delete(pname);
     Delete(mname);
+    Delete(pname);
     Delete(pmname);
     Delete(templ);
     Delete(tp_flags);
@@ -4498,9 +4486,11 @@ public:
 	  Setattr(n, "feature:python:tp_doc", ds);
 	  Delete(ds);
 	} else {
-	  String *name = Getattr(n, "name");
-	  String *rname = add_explicit_scope(SwigType_namestr(name));
+	  SwigType *name = Getattr(n, "name");
+	  SwigType *sname = add_explicit_scope(name);
+	  String *rname = SwigType_namestr(sname);
 	  Setattr(n, "feature:python:tp_doc", rname);
+	  Delete(sname);
 	  Delete(rname);
 	}
       } else {

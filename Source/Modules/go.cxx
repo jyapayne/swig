@@ -1,6 +1,10 @@
 /* -----------------------------------------------------------------------------
- * See the LICENSE file for information on copyright, usage and redistribution
- * of SWIG, and the README file for authors - http://www.swig.org/release.html.
+ * This file is part of SWIG, which is licensed as a whole under version 3
+ * (or any later version) of the GNU General Public License. Some additional
+ * terms also apply to certain portions of SWIG. The full details of the SWIG
+ * license and copyrights can be found in the LICENSE and COPYRIGHT files
+ * included with the SWIG source code as distributed by the SWIG developers
+ * and at https://www.swig.org/legal.html.
  *
  * go.cxx
  *
@@ -508,6 +512,9 @@ private:
     Swig_register_filebyname("cgo_comment_typedefs", f_cgo_comment_typedefs);
 
     Swig_banner(f_c_begin);
+
+    Swig_obligatory_macros(f_c_runtime, "GO");
+
     if (CPlusPlus) {
       Printf(f_c_begin, "\n// source: %s\n\n", swig_filename);
     } else {
@@ -515,6 +522,7 @@ private:
     }
 
     Printf(f_c_runtime, "#define SWIGMODULE %s\n", module);
+
     if (gccgo_flag) {
       Printf(f_c_runtime, "#define SWIGGO_PREFIX %s\n", go_prefix);
     }
@@ -4648,8 +4656,8 @@ private:
    * 'X'.
    * ---------------------------------------------------------------------- */
 
-  String *exportedName(String *name) {
-    String *copy = Copy(name);
+  String *exportedName(SwigType *name) {
+    SwigType *copy = Copy(name);
     char c = *Char(copy);
     if (islower(c)) {
       char l[2];
@@ -4669,7 +4677,7 @@ private:
       u[2] = '\0';
       Replace(copy, l, u, DOH_REPLACE_FIRST);
     }
-    String *ret = Swig_name_mangle(copy);
+    String *ret = Swig_name_mangle_type(copy);
     Delete(copy);
     return ret;
   }
@@ -4717,7 +4725,7 @@ private:
     Append(nw, c3);
     Delete(c2);
     Delete(c3);
-    String *ret = Swig_name_mangle(nw);
+    String *ret = Swig_name_mangle_string(nw);
     Delete(nw);
     return ret;
   }
@@ -4734,7 +4742,7 @@ private:
   String *buildGoWrapperName(String *name, String *overname) {
     String *s1 = NewString("_swig_wrap_");
     Append(s1, name);
-    String *s2 = Swig_name_mangle(s1);
+    String *s2 = Swig_name_mangle_string(s1);
     Delete(s1);
     if (overname) {
       Append(s2, overname);
@@ -5548,11 +5556,11 @@ private:
       return NewString("int");
     }
 
-    String *type = Getattr(n, "enumtype");
+    SwigType *type = Getattr(n, "enumtype");
     assert(type);
     char *p = Char(type);
     int len = Len(type);
-    String *s = NewString("");
+    SwigType *s = NewString("");
     bool capitalize = true;
     for (int i = 0; i < len; ++i, ++p) {
       if (*p == ':') {
@@ -5568,7 +5576,7 @@ private:
       }
     }
 
-    ret = Swig_name_mangle(s);
+    ret = Swig_name_mangle_type(s);
     Delete(s);
     return ret;
   }

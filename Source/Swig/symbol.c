@@ -4,7 +4,7 @@
  * terms also apply to certain portions of SWIG. The full details of the SWIG
  * license and copyrights can be found in the LICENSE and COPYRIGHT files
  * included with the SWIG source code as distributed by the SWIG developers
- * and at http://www.swig.org/legal.html.
+ * and at https://www.swig.org/legal.html.
  *
  * symbol.c
  *
@@ -1518,7 +1518,8 @@ Node *Swig_symbol_isoverloaded(Node *n) {
 static SwigType *symbol_template_qualify(const SwigType *e, Symtab *st) {
   String *tprefix, *tsuffix;
   SwigType *qprefix;
-  List *targs;
+  String *targs;
+  List *targslist;
   Node *tempn;
   Symtab *tscope;
   Iterator ti;
@@ -1541,12 +1542,15 @@ static SwigType *symbol_template_qualify(const SwigType *e, Symtab *st) {
   tprefix = SwigType_templateprefix(e);
   tsuffix = SwigType_templatesuffix(e);
   qprefix = Swig_symbol_type_qualify(tprefix, st);
-  targs = SwigType_parmlist(e);
+  targs = SwigType_templateargs(e);
+  targslist = SwigType_parmlist(targs);
   tempn = Swig_symbol_clookup_local(tprefix, st);
   tscope = tempn ? Getattr(tempn, "sym:symtab") : 0;
   Append(qprefix, "<(");
-  for (ti = First(targs); ti.item;) {
+  for (ti = First(targslist); ti.item;) {
     String *vparm;
+    /* TODO: the logic here should be synchronised with that in SwigType_typedef_qualified() */
+    /* TODO: ti.item might be a non-type parameter possibly within (), eg: (std::is_integral_v<(A)>||std::is_same_v<(A,node_t)>) */
     String *qparm = Swig_symbol_type_qualify(ti.item, st);
     if (tscope && (tscope != st)) {
       String *ty = Swig_symbol_type_qualify(qparm, tscope);
@@ -1568,6 +1572,7 @@ static SwigType *symbol_template_qualify(const SwigType *e, Symtab *st) {
   Delete(tprefix);
   Delete(tsuffix);
   Delete(targs);
+  Delete(targslist);
 #ifdef SWIG_DEBUG
   Printf(stderr, "symbol_temp_qual %s %s\n", e, qprefix);
 #endif
@@ -1741,7 +1746,7 @@ SwigType *Swig_symbol_typedef_reduce(const SwigType *ty, Symtab *tab) {
 
   n = Swig_symbol_clookup(base, tab);
   if (!n) {
-    if (SwigType_istemplate(ty)) {
+    if (SwigType_istemplate(base)) {
       SwigType *qt = Swig_symbol_template_reduce(base, tab);
       Append(prefix, qt);
       Delete(qt);

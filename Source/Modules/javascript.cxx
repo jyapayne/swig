@@ -4,7 +4,7 @@
  * terms also apply to certain portions of SWIG. The full details of the SWIG
  * license and copyrights can be found in the LICENSE and COPYRIGHT files
  * included with the SWIG source code as distributed by the SWIG developers
- * and at http://www.swig.org/legal.html.
+ * and at https://www.swig.org/legal.html.
  *
  * javascript.cxx
  *
@@ -1461,7 +1461,7 @@ Hash *JSEmitter::createNamespaceEntry(const char *_name, const char *parent, con
   Hash *entry = NewHash();
   String *name = NewString(_name);
   Setattr(entry, NAME, Swig_scopename_last(name));
-  Setattr(entry, NAME_MANGLED, Swig_name_mangle(name));
+  Setattr(entry, NAME_MANGLED, Swig_name_mangle_string(name));
   Setattr(entry, PARENT, NewString(parent));
   Setattr(entry, PARENT_MANGLED, NewString(parent_mangled));
 
@@ -1614,6 +1614,8 @@ int JSCEmitter::initialize(Node *n) {
   Swig_register_filebyname("init", f_init);
 
   Swig_banner(f_wrap_cpp);
+
+  Swig_obligatory_macros(f_runtime, "JAVASCRIPT");
 
   return SWIG_OK;
 }
@@ -1944,6 +1946,8 @@ int V8Emitter::initialize(Node *n) {
   state.globals(FORCE_CPP, NewString("1"));
 
   Swig_banner(f_wrap_cpp);
+
+  Swig_obligatory_macros(f_runtime, "JAVASCRIPT");
 
   return SWIG_OK;
 }

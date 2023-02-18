@@ -90,7 +90,6 @@ CPP_TEST_BROKEN += \
 	nested_private \
 	template_default_pointer \
 	template_private_assignment \
-	template_expr \
 	$(CPP11_TEST_BROKEN) \
 	$(CPP14_TEST_BROKEN) \
 	$(CPP17_TEST_BROKEN) \
@@ -133,6 +132,7 @@ CPP_TEST_CASES += \
 	bloody_hell \
 	bools \
 	catches \
+	catches_strings \
 	cast_operator \
 	casts \
 	char_binary \
@@ -215,13 +215,16 @@ CPP_TEST_CASES += \
 	director_ref \
 	director_simple \
 	director_smartptr \
+	director_template \
 	director_thread \
 	director_unroll \
+	director_unwrap_result \
 	director_using \
 	director_using_member_scopes \
 	director_void \
 	director_wombat \
 	disown \
+	duplicate_class_name_in_ns \
 	dynamic_cast \
 	empty \
 	enum_ignore \
@@ -455,10 +458,12 @@ CPP_TEST_CASES += \
 	template_enum_ns_inherit \
 	template_enum_typedef \
 	template_explicit \
+	template_expr \
 	template_extend1 \
 	template_extend2 \
 	template_extend_overload \
 	template_extend_overload_2 \
+	template_function_parm \
 	template_forward \
 	template_inherit \
 	template_inherit_abstract \
@@ -482,6 +487,7 @@ CPP_TEST_CASES += \
 	template_parameters_global_scope \
 	template_partial_arg \
 	template_partial_specialization \
+	template_partial_specialization_more \
 	template_partial_specialization_typedef \
 	template_qualifier \
 	template_ref_type \
@@ -493,6 +499,7 @@ CPP_TEST_CASES += \
 	template_static \
 	template_tbase_template \
 	template_template_parameters \
+	template_template_template_parameters \
 	template_typedef \
 	template_typedef_class_template \
 	template_typedef_cplx \
@@ -590,6 +597,7 @@ CPP11_TEST_CASES += \
 	cpp11_director_enums \
 	cpp11_directors \
 	cpp11_explicit_conversion_operators \
+	cpp11_final_class \
 	cpp11_final_directors \
 	cpp11_final_override \
 	cpp11_function_objects \
@@ -619,16 +627,18 @@ CPP11_TEST_CASES += \
 	cpp11_thread_local \
 	cpp11_template_double_brackets \
 	cpp11_template_explicit \
+	cpp11_template_parameters_decltype \
 	cpp11_template_typedefs \
 	cpp11_type_traits \
 	cpp11_type_aliasing \
 	cpp11_uniform_initialization \
 	cpp11_unrestricted_unions \
 	cpp11_userdefined_literals \
+	cpp11_variadic_function_templates \
+	cpp11_variadic_templates \
 
 # Broken C++11 test cases.
 CPP11_TEST_BROKEN = \
-#	cpp11_variadic_templates \    # Broken for some languages (such as Java)
 #	cpp11_reference_wrapper \     # No typemaps
 
 # C++14 test cases.
@@ -640,6 +650,7 @@ CPP14_TEST_BROKEN = \
 
 # C++17 test cases.
 CPP17_TEST_CASES += \
+	cpp17_enable_if_t \
 	cpp17_hex_floating_literals \
 	cpp17_nested_namespaces \
 	cpp17_nspace_nested_namespaces \
@@ -709,6 +720,7 @@ CPP_STD_TEST_CASES += \
 	li_std_vector_enum \
 	li_std_vector_member_var\
 	li_std_vector_ptr \
+	li_std_vector_vector \
 	li_std_wstring \
 	smart_pointer_inherit \
 	template_typedef_fnc \
@@ -753,6 +765,7 @@ C_TEST_CASES += \
 	enum_macro \
 	enum_missing \
 	extern_declaration \
+	final_c \
 	funcptr \
 	function_typedef \
 	global_functions \
@@ -786,6 +799,7 @@ C_TEST_CASES += \
 	preproc_gcc_output \
 	preproc_include \
 	preproc_line_file \
+	preproc_predefined \
 	register_par \
 	ret_by_value \
 	simple_array \

@@ -30,6 +30,7 @@
 <li><a href="#Php_nn2_6_3">Static Member Variables</a>
 <li><a href="#Php_nn2_6_4">Static Member Functions</a>
 <li><a href="#Php_nn2_6_5">Specifying Implemented Interfaces</a>
+<li><a href="#Php_nn2_6_6">Dynamic Properties</a>
 </ul>
 <li><a href="#Php_nn2_7">PHP Pragmas, Startup and Shutdown code</a>
 </ul>
@@ -634,16 +635,10 @@ variable, or assigning <tt>NULL</tt> to a variable.
 
 
 <p>
-SWIG defaults to wrapping C++ structs and classes with PHP classes.
+SWIG wraps C++ structs and classes with PHP classes.
 Since SWIG 4.1.0, this is done entirely via PHP's C API - earlier SWIG
 versions generated a PHP wrapper script which defined proxy classes
 which called a set of flat functions which actually wrapped the C++ class.
-</p>
-
-<p>
-If you don't want the class wrappers, you can pass the command-line option
-"-noproxy" in which case you'll get C++ classes wrapped as flat functions
-as described below.
 </p>
 
 <p>
@@ -698,33 +693,16 @@ Member variables and methods are accessed using the <tt>-&gt;</tt> operator.
 
 
 <p>
-The <tt>-noproxy</tt> option flattens the object structure and
-generates collections of named functions.  The above example results
-in the following PHP functions:
+SWIG/PHP used to support a <tt>-noproxy</tt> option to flatten the class
+structure and generate collections of named flat functions.  This is no
+longer supported as of SWIG 4.1.0.
 </p>
-
-<div class="code"><pre>
-new_Vector();
-Vector_x_set($obj, $d);
-Vector_x_get($obj);
-Vector_y_set($obj, $d);
-Vector_y_get($obj);
-Vector_z_set($obj, $d);
-Vector_z_get($obj);
-Vector_magnitude($obj);
-new_Complex();
-Complex_re_set($obj, $d);
-Complex_re_get($obj);
-Complex_im_set($obj, $d);
-Complex_im_get($obj);
-</pre></div>
 
 <H4><a name="Php_nn2_6_2">32.2.6.2 Constructors and Destructors</a></H4>
 
 
 <p>
-The constructor is called when <tt>new Object()</tt> (or
-<tt>new_Object()</tt> if using <tt>-noproxy</tt>) is used to create an
+The constructor is called when <tt>new Object()</tt> is used to create an
 instance of the object. If multiple constructors are defined for an
 object, function overloading will be used to determine which
 constructor to execute.
@@ -842,6 +820,53 @@ so:
 <p>
 If there are multiple interfaces, just list them separated by commas.
 </p>
+
+
+<H4><a name="Php_nn2_6_6">32.2.6.6 Dynamic Properties</a></H4>
+
+
+<p>
+Historically PHP has supported dynamic class properties and SWIG
+has implemented them too (because we implement the magic <tt>__get()</tt>,
+<tt>__set()</tt> and <tt>__isset()</tt> methods we need to include explicit
+handling).
+</p>
+
+<p>
+PHP 8.2 <a
+href="https://wiki.php.net/rfc/deprecate_dynamic_properties">deprecates
+dynamic class properties</a> - initially they'll warn, and apparently they'll
+not work by default in PHP 9.0.
+</p>
+
+<p>
+In PHP code dynamic properties can be enabled for a class by
+marking that class with the attribute <tt>#[AllowDynamicProperties]</tt>.
+</p>
+
+<p>
+To follow this PHP change, as of SWIG 4.1.0 you now need enable dynamic
+properties for any classes you want to support them.  To enable for class
+<tt>Foo</tt>:
+</p>
+
+<div class="code"><pre>
+%feature("php:allowdynamicproperties", 1) Foo;
+</pre></div>
+
+<p>
+or to enable them for all wrapped classes:
+</p>
+
+<div class="code"><pre>
+%feature("php:allowdynamicproperties", 1);
+</pre></div>
+
+<p>
+Note that unknown features are ignored, so you can add use these
+unconditionally in your interface file and it'll work with older SWIG too.
+</p>
+
 
 <H3><a name="Php_nn2_7">32.2.7 PHP Pragmas, Startup and Shutdown code</a></H3>
 

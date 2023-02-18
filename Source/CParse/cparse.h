@@ -4,7 +4,7 @@
  * terms also apply to certain portions of SWIG. The full details of the SWIG
  * license and copyrights can be found in the LICENSE and COPYRIGHT files
  * included with the SWIG source code as distributed by the SWIG developers
- * and at http://www.swig.org/legal.html.
+ * and at https://www.swig.org/legal.html.
  *
  * cparse.h
  *
@@ -66,8 +66,9 @@ extern "C" {
 
 /* templ.c */
   extern int Swig_cparse_template_expand(Node *n, String *rname, ParmList *tparms, Symtab *tscope);
-  extern Node *Swig_cparse_template_locate(String *name, ParmList *tparms, Symtab *tscope);
+  extern Node *Swig_cparse_template_locate(String *name, ParmList *tparms, String *symname, Symtab *tscope);
   extern void Swig_cparse_debug_templates(int);
+  extern ParmList *Swig_cparse_template_parms_expand(ParmList *instantiated_parameters, Node *primary, Node *templ);
 
 #ifdef __cplusplus
 }

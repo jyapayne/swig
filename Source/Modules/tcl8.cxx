@@ -4,7 +4,7 @@
  * terms also apply to certain portions of SWIG. The full details of the SWIG
  * license and copyrights can be found in the LICENSE and COPYRIGHT files
  * included with the SWIG source code as distributed by the SWIG developers
- * and at http://www.swig.org/legal.html.
+ * and at https://www.swig.org/legal.html.
  *
  * tcl8.cxx
  *
@@ -161,7 +161,7 @@ public:
 
     Swig_banner(f_begin);
 
-    Printf(f_runtime, "\n\n#ifndef SWIGTCL\n#define SWIGTCL\n#endif\n\n");
+    Swig_obligatory_macros(f_runtime, "TCL");
 
     /* Set the module name, namespace, and prefix */
 
@@ -712,7 +712,7 @@ public:
   virtual int classHandler(Node *n) {
     static Hash *emitted = NewHash();
     String *mangled_classname = 0;
-    String *real_classname = 0;
+    SwigType *real_classname = 0;
 
     have_constructor = 0;
     have_destructor = 0;
@@ -740,7 +740,7 @@ public:
       return SWIG_ERROR;
 
     real_classname = Getattr(n, "name");
-    mangled_classname = Swig_name_mangle(real_classname);
+    mangled_classname = Swig_name_mangle_type(real_classname);
 
     if (Getattr(emitted, mangled_classname))
       return SWIG_NOWRAP;
@@ -806,7 +806,7 @@ public:
       int index = 0;
       b = First(baselist);
       while (b.item) {
-	String *bname = Getattr(b.item, "name");
+	SwigType *bname = Getattr(b.item, "name");
 	if ((!bname) || GetFlag(b.item, "feature:ignore") || (!Getattr(b.item, "module"))) {
 	  b = Next(b);
 	  continue;
@@ -816,7 +816,7 @@ public:
 	  Printv(base_classes, bname, " ", NIL);
 	  Printv(base_class_init, "    ", bname, "Ptr::constructor $ptr\n", NIL);
 	}
-	String *bmangle = Swig_name_mangle(bname);
+	String *bmangle = Swig_name_mangle_type(bname);
 	//      Printv(f_wrappers,"extern swig_class _wrap_class_", bmangle, ";\n", NIL);
 	//      Printf(base_class,"&_wrap_class_%s",bmangle);
 	Printf(base_class, "0");

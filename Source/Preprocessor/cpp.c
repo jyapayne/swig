@@ -4,7 +4,7 @@
  * terms also apply to certain portions of SWIG. The full details of the SWIG
  * license and copyrights can be found in the LICENSE and COPYRIGHT files
  * included with the SWIG source code as distributed by the SWIG developers
- * and at http://www.swig.org/legal.html.
+ * and at https://www.swig.org/legal.html.
  *
  * cpp.c
  *
@@ -950,14 +950,14 @@ static String *expand_macro(String *name, List *args, String *line_file) {
       /* Non-standard mangle expansions.  
          The #@Name is replaced by mangle_arg(Name). */
       if (strstr(Char(ns), "\004")) {
-	String *marg = Swig_string_mangle(arg);
+	String *marg = Swig_name_mangle_string(arg);
 	Clear(temp);
 	Printf(temp, "\004%s", aname);
 	Replace(ns, temp, marg, DOH_REPLACE_ID_END);
 	Delete(marg);
       }
       if (strstr(Char(ns), "\005")) {
-	String *marg = Swig_string_mangle(arg);
+	String *marg = Swig_name_mangle_string(arg);
 	Clear(temp);
 	Clear(tempa);
 	Printf(temp, "\005%s", aname);

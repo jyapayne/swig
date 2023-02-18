@@ -4,7 +4,7 @@
  * terms also apply to certain portions of SWIG. The full details of the SWIG
  * license and copyrights can be found in the LICENSE and COPYRIGHT files
  * included with the SWIG source code as distributed by the SWIG developers
- * and at http://www.swig.org/legal.html.
+ * and at https://www.swig.org/legal.html.
  *
  * lang.cxx
  *
@@ -77,7 +77,9 @@ static Hash *classhash;
 extern int GenerateDefault;
 extern int ForceExtern;
 extern int AddExtern;
-extern int UseWrapperSuffix;
+extern "C" {
+  extern int UseWrapperSuffix;
+}
 
 /* import modes */
 
@@ -1308,16 +1310,18 @@ int Language::staticmemberfunctionHandler(Node *n) {
     else
       cname = NewStringf("%s::%s", sname, name);
   } else {
-    String *mname = Swig_name_mangle(ClassName);
+    String *classname_str = SwigType_namestr(ClassName);
+    String *mname = Swig_name_mangle_string(classname_str);
     cname = Swig_name_member(NSpace, mname, name);
     Delete(mname);
+    Delete(classname_str);
   }
   mrename = Swig_name_member(NSpace, ClassPrefix, symname);
 
   if (Extend) {
     String *code = Getattr(n, "code");
     String *defaultargs = Getattr(n, "defaultargs");
-    String *mangled = Swig_name_mangle(mrename);
+    String *mangled = Swig_name_mangle_string(mrename);
     Delete(mrename);
     mrename = mangled;
 
@@ -1331,7 +1335,7 @@ int Language::staticmemberfunctionHandler(Node *n) {
 
       if (!defaultargs) {
 	/* Hmmm. An added static member.  We have to create a little wrapper for this */
-	String *mangled_cname = Swig_name_mangle(cname);
+	String *mangled_cname = Swig_name_mangle_string(cname);
 	Swig_add_extension_code(n, mangled_cname, parms, type, code, CPlusPlus, 0);
 	Setattr(n, "extendname", mangled_cname);
 	Delete(mangled_cname);
