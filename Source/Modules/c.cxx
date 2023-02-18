@@ -8,6 +8,7 @@
  * ----------------------------------------------------------------------------- */
 
 #include <ctype.h>
+#include <map>
 #include "swigmod.h"
 
 extern int UseWrapperSuffix; // from main.cxx
@@ -2409,6 +2410,7 @@ public:
        Parm *p;
        int index = 1;
        String *lname = 0;
+       std::map<int, int> strmap;
 
        for (p = (Parm*)parms, index = 1; p; (p = nextSibling(p)), index++) {
             String* name = Getattr(p, "name");
@@ -2425,7 +2427,15 @@ public:
               name_ptr = Swig_scopename_last(name);
               name = name_ptr.get();
             }
-            Setattr(p, "lname", name);
+            if (strmap.count(Hashval(name))) {
+                strmap[Hashval(name)]++;
+                String* nname = NewStringf("%s%d", name, strmap[Hashval(name)]);
+                Setattr(p, "lname", nname);
+            }
+            else {
+                Setattr(p, "lname", name);
+                strmap[Hashval(name)] = 1;
+            }
        }
 
        // C++ function wrapper
